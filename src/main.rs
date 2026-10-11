@@ -22,23 +22,50 @@ fn main() {
     eframe::WebLogger::init(log::LevelFilter::Debug).ok();
     let web_options = eframe::WebOptions::default();
     wasm_bindgen_futures::spawn_local(async {
-        let document = web_sys::window()
-            .expect("no global window")
-            .document()
-            .expect("no document");
-        let canvas = document
+        let show_error = |msg: &str| {
+            if let Some(window) = web_sys::window() {
+                if let Some(document) = window.document() {
+                    if let Some(el) = document.get_element_by_id("loading") {
+                        el.set_text_content(Some(msg));
+                    }
+                }
+            }
+        };
+
+        let document = match web_sys::window().and_then(|w| w.document()) {
+            Some(d) => d,
+            None => {
+                show_error("Error: no document");
+                return;
+            }
+        };
+        let canvas = match document
             .get_element_by_id("cairn-text")
-            .expect("canvas #cairn-text not found")
-            .dyn_into::<web_sys::HtmlCanvasElement>()
-            .expect("not a canvas");
-        eframe::WebRunner::new()
+            .and_then(|el| el.dyn_into::<web_sys::HtmlCanvasElement>().ok())
+        {
+            Some(c) => c,
+            None => {
+                show_error("Error: canvas not found");
+                return;
+            }
+        };
+        match eframe::WebRunner::new()
             .start(
                 canvas,
                 web_options,
                 Box::new(|_cc| Ok(Box::new(CairnEditor::default()))),
             )
             .await
-            .expect("failed to start eframe");
+        {
+            Ok(_) => {
+                if let Some(el) = document.get_element_by_id("loading") {
+                    el.set_text_content(Some(""));
+                }
+            }
+            Err(e) => {
+                show_error(&format!("Failed to start: {:?}. WebGL2 may not be available.", e));
+            }
+        }
     });
 }
 
