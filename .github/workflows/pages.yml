@@ -28,7 +28,7 @@ jobs:
         run: cargo install trunk --locked
 
       - name: Build WASM
-        run: trunk build --release
+        run: trunk build --release --public-url /cairn-text/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
