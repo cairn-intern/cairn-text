@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Cairn Text</title>
+  <link data-trunk rel="rust" data-wasm-opt="z" />
   <style>
     html, body {
       margin: 0;
@@ -11,19 +12,37 @@
       height: 100%;
       overflow: hidden;
       background: #1a1a1a;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     canvas {
       display: block;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
+    }
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #888;
+      font-family: monospace;
     }
   </style>
 </head>
 <body>
+  <div id="loading">Loading Cairn Text...</div>
   <canvas id="cairn-text"></canvas>
-  <script type="module">
-    import init from './cairn-text.js';
-    init();
+  <script>
+    // Remove loading text once WASM starts
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const el = document.getElementById('loading');
+        if (el) el.style.display = 'none';
+      }, 3000);
+    });
   </script>
 </body>
 </html>
