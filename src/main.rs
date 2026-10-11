@@ -67,6 +67,7 @@ impl CairnEditor {
     }
 
     fn open_file(&mut self) {
+        #[cfg(not(target_arch = "wasm32"))]
         if let Some(path) = rfd::FileDialog::new().pick_file() {
             match std::fs::read_to_string(&path) {
                 Ok(content) => {
@@ -81,25 +82,37 @@ impl CairnEditor {
                 Err(e) => self.status = format!("Open failed: {}", e),
             }
         }
+        #[cfg(target_arch = "wasm32")]
+        {
+            self.status = "File open not supported in browser.".to_string();
+        }
     }
 
     fn save_file(&mut self) {
-        let path_opt = self.active_tab_mut().path.clone();
-        if let Some(path) = path_opt {
-            let content = self.active_tab_mut().content.clone();
-            match std::fs::write(&path, &content) {
-                Ok(()) => {
-                    self.active_tab_mut().dirty = false;
-                    self.status = format!("Saved {}.", path.display());
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let path_opt = self.active_tab_mut().path.clone();
+            if let Some(path) = path_opt {
+                let content = self.active_tab_mut().content.clone();
+                match std::fs::write(&path, &content) {
+                    Ok(()) => {
+                        self.active_tab_mut().dirty = false;
+                        self.status = format!("Saved {}.", path.display());
+                    }
+                    Err(e) => self.status = format!("Save failed: {}", e),
                 }
-                Err(e) => self.status = format!("Save failed: {}", e),
+            } else {
+                self.save_file_as();
             }
-        } else {
-            self.save_file_as();
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            self.status = "File save not supported in browser.".to_string();
         }
     }
 
     fn save_file_as(&mut self) {
+        #[cfg(not(target_arch = "wasm32"))]
         if let Some(path) = rfd::FileDialog::new().save_file() {
             let content = self.active_tab_mut().content.clone();
             match std::fs::write(&path, &content) {
@@ -111,6 +124,10 @@ impl CairnEditor {
                 }
                 Err(e) => self.status = format!("Save failed: {}", e),
             }
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            self.status = "File save not supported in browser.".to_string();
         }
     }
 
