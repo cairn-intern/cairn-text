@@ -19,6 +19,31 @@ fn main() -> eframe::Result<()> {
 #[cfg(target_arch = "wasm32")]
 fn main() {
     use eframe::wasm_bindgen::JsCast as _;
+    // Custom panic hook that shows errors in the DOM
+    std::panic::set_hook(Box::new(|info| {
+        let msg = format!("Panic: {}", info);
+        if let Some(window) = web_sys::window() {
+            if let Some(document) = window.document() {
+                if let Some(el) = document.get_element_by_id("loading") {
+                    el.set_text_content(Some(&msg));
+                    // Make sure it's visible
+                    if let Some(_) = el.dyn_ref::<web_sys::HtmlElement>() {
+                        let style = web_sys::window()
+                            .unwrap()
+                            .document()
+                            .unwrap()
+                            .get_element_by_id("loading")
+                            .unwrap();
+                        let _ = js_sys::Reflect::set(
+                            &style,
+                            &"style".into(),
+                            &"display:block;color:red;z-index:9999;".into(),
+                        );
+                    }
+                }
+            }
+        }
+    }));
     eframe::WebLogger::init(log::LevelFilter::Debug).ok();
     let web_options = eframe::WebOptions::default();
     wasm_bindgen_futures::spawn_local(async {
