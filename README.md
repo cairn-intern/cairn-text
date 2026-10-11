@@ -1,4 +1,4 @@
-# Cairn Editor
+# Cairn Text
 
 A lightweight text editor built with [egui](https://github.com/emilk/egui), part of the Cairn ecosystem.
 
